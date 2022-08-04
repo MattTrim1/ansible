@@ -57,6 +57,18 @@
         regexp: '^#?PermitRootLogin'
         line: 'PermitRootLogin no'
 
+    - name: Deny SSH access from all IP ranges
+      copy:
+        dest: '/etc/hosts.deny'
+        content: |
+          sshd: ALL
+         
+    - name: Allow access from control plane
+      copy:
+        dest: '/etc/hosts.allow'
+        content: |
+          sshd: {{ ansible_control_plane_ip }}
+
     # UFW Setup
     - name: UFW - Allow SSH connections
       ufw:
