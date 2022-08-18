@@ -6,4 +6,4 @@ It installs various packages, creates a user with passwordless root, and restric
 
 To run the playbook, use the following command:
 
-`ansible-playbook -i HOSTNAME, playbooks/debian11/playbook.yml --extra-vars "ansible_control_plane_ip=CONTROL_PLANE_IP`
+`ansible-playbook -i HOSTNAME, playbook.yml --extra-vars "ansible_control_plane_ip=CONTROL_PLANE_IP"`
