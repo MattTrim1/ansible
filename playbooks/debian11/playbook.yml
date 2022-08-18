@@ -69,6 +69,12 @@
         content: |
           sshd: {{ ansible_control_plane_ip }}
 
+    - name: Add search domain to resolv.conf
+      lineinfile:
+        path: /etc/resolv.conf
+        state: present
+        line: 'search trim.gdn'
+
     # UFW Setup
     - name: UFW - Allow SSH connections
       ufw:
