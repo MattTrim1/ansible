@@ -1,0 +1,21 @@
+###
+### Add a new peer to a Wireguard server.
+###
+---
+
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Add new client to server config
+      blockinfile:
+        path: /etc/wireguard/vpn.conf
+        content: |
+          [Peer]
+          PublicKey = {{ client_pub_key }}
+          AllowedIPs = {{ client_cidr }}
+
+    - name: Restart Wireguard
+      systemd:
+        name: wg-quick@vpn.service
+        state: restarted

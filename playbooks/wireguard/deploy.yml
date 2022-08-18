@@ -1,0 +1,58 @@
+###
+### Bring up a new Wireguard server.
+###
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Update apt repository cache
+      apt:
+        update_cache: yes
+
+    - name: Install packages
+      apt:
+        name: "{{ packages  }}"
+      vars:
+        packages:
+          - wireguard
+          - linux-headers-{{ ansible_kernel }}
+          - qrencode
+
+    - name: UFW allow Wireguard
+      ufw:
+        rule: allow
+        port: "51820"
+        proto: udp
+
+    - name: Add Wireguard kernel module
+      modprobe:
+        name: wireguard
+
+    - name: Copy Wireguard server config
+      copy:
+        dest: /etc/wireguard/vpn.conf
+        owner: root
+        group: root
+        mode: 0600
+        content: |
+          [Interface]
+          Address = 10.0.0.1/24
+          ListenPort = 51820
+          PrivateKey = {{ wireguard_srv_private_key  }}
+          PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+          PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+    - name: Enable IP forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: Enable Wireguard vpn service
+      systemd:
+        name: wg-quick@vpn.service
+        enabled: yes
+        state: started
