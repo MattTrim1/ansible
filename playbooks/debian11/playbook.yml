@@ -71,7 +71,7 @@
 
     - name: Add search domain to resolv.conf
       lineinfile:
-        path: /etc/resolv.conf
+        path: /etc/resolvconf/resolv.conf.d/head
         state: present
         line: 'search trim.gdn'
 
