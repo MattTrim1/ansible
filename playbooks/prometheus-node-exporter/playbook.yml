@@ -1,0 +1,56 @@
+###
+### Install Prometheus node exporter on ansible managed servers.
+###
+---
+- hosts: all
+  become: true
+  
+  vars:
+    - node_exporter_version: 1.3.1 
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Download node exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+        dest: /tmp
+    
+    - name: Untar node exporter
+      unarchive:
+        remote_src: yes
+        src: /tmp/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+        dest: /tmp
+    
+    - name: Move node exporter to /usr/local/bin
+      copy:
+        src: /tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter
+        dest: /usr/local/bin/node_exporter
+        remote_src: yes
+        owner: root
+        group: root
+        mode: 0755
+    
+    - name: Install systemd unit file
+      template:
+        src: templates/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: 0600
+    
+    - name: Configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: node_exporter.service
+
+    - name: Allow Prometheus server to access port 9100
+      ufw:  
+        rule: allow
+        src: "{{ prometheus_server_ip }}"
+        port: '9100'
+        comment: Allow Prometheus server to access server metrics
