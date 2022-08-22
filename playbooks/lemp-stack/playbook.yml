@@ -1,0 +1,79 @@
+###
+### Deploy a LEMP (Linux, Nginx, MariaDB, PHP) stack on a Debian 11 server.
+###
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install MariaDB
+      apt:
+        pkg: "{{ mariadb_packages }}"
+        state: present
+        update_cache: true
+      notify: remove test db
+
+    - name: Configure MariaDB server
+      template:
+        src: etc/mysql/mariadb.conf.d/60-server.cnf.j2
+        dest: /etc/mysql/mariadb.conf.d/60-server.cnf
+        owner: root
+        group: root
+        mode: 0644
+      notify: restart mariadb
+
+    - name: start MariaDB
+      service:
+        name: mysql
+        state: started
+
+    - name: Install webserver packages
+      apt:
+        name: "{{ web_packages }}"
+        state: "latest"
+
+    - name: Create custom site includes directory
+      file:
+        path: /etc/sites
+        state: directory
+        mode: 0755
+
+    - name: Define custom site includes directory in nginx.conf
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        insertafter: "include /etc/nginx/sites-enabled/"
+        line: "        include /etc/sites/*;"
+        state: present
+
+    - name: Open port 443 to all hosts
+      ufw:
+        rule: allow
+        port: "443"
+
+    - name: Open port 3306 to Prometheus server and VPN
+      ufw:
+        rule: allow
+        src: "{{ item }}"
+        port: "3306"
+        comment: Allow Prometheus server and VPN to access MariaDB
+      loop:
+        - "{{ prometheus_server_ip }}"
+        - "{{ vpn_ip }}"
+
+  handlers:
+    - name: restart mariadb
+      service:
+        name: mysql
+        state: restarted
+
+    - name: remove test db
+      mysql_db:
+        name: test
+        state: absent
+        login_unix_socket: /run/mysqld/mysqld.sock
