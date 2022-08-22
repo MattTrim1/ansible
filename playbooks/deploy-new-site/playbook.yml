@@ -1,0 +1,56 @@
+###
+### Deploy a new site to an existing lemp server.
+###
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Create new SQL database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+
+    - name: Create new SQL user
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL,GRANT"
+        state: present
+
+    - name: Configure new Nginx site
+      template:
+        src: siteconf.conf.j2
+        dest: "/etc/sites/{{ site_name }}.conf"
+        owner: root
+        group: root
+        mode: 0644
+      notify: reload nginx
+
+    - name: Create site directory
+      file:
+        path: "/var/www/html/{{ site_name }}"
+        owner: matt
+        state: directory
+
+    - name: Checkout the site git repo
+      become: false
+      git:
+        repo: git@lab.matthewtrim.dev:matt/matthewtrim-dev.git
+        dest: "/var/www/html/{{ site_name }}"
+
+    - name: Set correct file permissions
+      file:
+        path: "/var/www/html/{{ site_name }}"
+        owner: www-data
+        group: www-data
+        mode: 0755
+        recurse: yes
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
