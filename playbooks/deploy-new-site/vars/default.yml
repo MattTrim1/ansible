@@ -1,0 +1,5 @@
+---
+db_name: matthewtrimdev_backdrop
+db_user: mtbd
+db_password: "{{ db_pass }}"
+site_name: matthewtrim.dev

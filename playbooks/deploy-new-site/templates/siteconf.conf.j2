@@ -1,0 +1,30 @@
+server {
+    listen 443;
+    listen [::]:443;
+    root /var/www/html/matthewtrim.dev;
+    index  index.php index.html index.htm;
+    server_name  matthewtrim.dev www.matthewtrim.dev;
+
+    location / {
+        try_files $uri /index.php?$query_string;        
+    }
+
+    location @rewrite {
+        rewrite ^/(.*)$ /index.php?q=$1 last;
+    }
+
+    location ~ [^/]\.php(/|$) {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ ^(/[a-z\-]+)?/system/files/ {
+        try_files $uri /index.php?$query_string;
+    }
+
+   location ~ ^/sites/.*/files/styles/ {
+        try_files $uri @rewrite;
+    }
+}
