@@ -1,0 +1,47 @@
+---
+# Debian 11 ships with PHP 7.4 which is the desired version so we don't need to add a PHP apt repo or specify versions here :)
+web_packages:
+  [
+    "nginx",
+    "php-cli",
+    "php-fpm",
+    "php-json",
+    "php-pdo",
+    "php-mysql",
+    "php-zip",
+    "php-gd",
+    "php-mbstring",
+    "php-curl",
+    "php-xml",
+    "php-pear",
+    "php-bcmath",
+  ]
+
+mariadb_packages:
+  - mariadb-client
+  - mariadb-server
+  - python3-pymysql
+
+mariadb_mysqld_performance_options:
+  innodb_buffer_pool_instances: "{{ ansible_processor_vcpus|default(1) }}"
+  innodb_buffer_pool_size: "{{ (ansible_memtotal_mb / 2) | int }}M"
+  query_cache_type: "0"
+
+mariadb_mysqld_charset_options:
+  {
+    character_set_server: "utf8mb4",
+    collation_server: "utf8mb4_unicode_ci",
+    init_connect: "SET NAMES utf8mb4",
+  }
+
+mariadb_mysqld_network_options: { bind-address: "0.0.0.0" }
+
+mariadb_mysqld_options: {}
+
+mariadb_mysqld_options_combined:
+  - section: "mysqld"
+    options:
+      - "{{ mariadb_mysqld_performance_options }}"
+      - "{{ mariadb_mysqld_charset_options }}"
+      - "{{ mariadb_mysqld_network_options }}"
+      - "{{ mariadb_mysqld_options }}"
