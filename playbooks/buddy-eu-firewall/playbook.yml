@@ -1,0 +1,16 @@
+###
+### Allow buddy.works deployment IPs to access a box.
+###
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Allow buddy.works deployment IPs to access via firewall
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ item }}"
+        comment: Allow buddy.works deployment IPs to access
+      with_items: "{{ ips }}"
