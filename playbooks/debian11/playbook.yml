@@ -57,18 +57,6 @@
         regexp: '^#?PermitRootLogin'
         line: 'PermitRootLogin no'
 
-    - name: Deny SSH access from all IP ranges
-      copy:
-        dest: '/etc/hosts.deny'
-        content: |
-          sshd: ALL
-         
-    - name: Allow access from control plane
-      copy:
-        dest: '/etc/hosts.allow'
-        content: |
-          sshd: {{ ansible_control_plane_ip }}
-
     - name: Add search domain to resolv.conf
       lineinfile:
         path: /etc/resolvconf/resolv.conf.d/head
