@@ -57,11 +57,11 @@
         regexp: '^#?PermitRootLogin'
         line: 'PermitRootLogin no'
 
-    - name: Add search domain to resolv.conf
-      lineinfile:
-        path: /etc/resolvconf/resolv.conf.d/head
-        state: present
-        line: 'search trim.gdn'
+#    - name: Add search domain to resolv.conf
+#     lineinfile:
+#        path: /etc/resolvconf/resolv.conf.d/head
+#        state: present
+#        line: 'search trim.gdn'
 
     # UFW Setup
     - name: UFW - Allow SSH connections
